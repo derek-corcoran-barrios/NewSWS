@@ -1,3 +1,5 @@
+library(tidyverse)
+
 Results <- read_rds("Results.rds")
 
 Results2 <- read_rds("Results2.rds")
@@ -10,8 +12,3 @@ saveRDS(Results3, "Results3.rds")
 
 
 ggplot(Results3, aes(y = Mean, x = Time, group = Meassurement)) + geom_ribbon(aes(ymax = Upper, ymin = Lower, fill = Meassurement), alpha = 0.3) + geom_path(aes(color = Meassurement)) + geom_point(aes(color = Meassurement)) + theme_bw() + facet_grid(Type ~ ., scales = "free_y") + theme(legend.position = "bottom") + scale_x_reverse() + xlab("Time [Ma]") + ylab("") + geom_vline(xintercept = 250, lty = 2, color = "red") + geom_vline(xintercept = 200, lty = 2, color = "red")
-
-ggplot(Results2, aes(y = Mean, x = Time, group = Meassurement)) + geom_ribbon(aes(ymax = Upper, ymin = Lower, fill = Meassurement), alpha = 0.3) + geom_path(aes(color = Meassurement)) + geom_point(aes(color = Meassurement)) + theme_bw() + facet_grid(Type ~ ., scales = "free_y") + theme(legend.position = "bottom") + scale_x_reverse() + xlab("Time [Ma]") + ylab("") + geom_vline(xintercept = 250, lty = 2, color = "red") + geom_vline(xintercept = 200, lty = 2, color = "red")
-
-
-View(Results3)
