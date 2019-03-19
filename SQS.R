@@ -1,7 +1,6 @@
 ### load the necessary packages
 
 library(tidyverse)
-library(readxl)
 library(PBSmodelling)
 library(foreach)
 library(doParallel)
@@ -10,11 +9,9 @@ library(doParallel)
 
 EcoData <- read_csv("EcoData2019.csv")
 
-
 ##Make a list of the data input spearated by SEQ_NO
 
 Data2 <- EcoData %>% split(.$TIME)
-
 
 ### make functions for SQS
 
@@ -49,17 +46,17 @@ RichnessWhile <- function(Data, quorum = 0.95){
     }
   }
   
-  ## Calculate species richness
+  ## Calculate species richness, Tropical species richness and temperate species richness
   Richness <- nrow(Data[1:i,] %>% group_by(GENUS) %>% summarise(NSpp = n()))
   Trop <- nrow(Data[1:i,] %>% filter(CLIM == "tropical") %>% group_by(GENUS) %>% summarise(NSpp = n()))
   Temp <- nrow(Data[1:i,] %>% filter(CLIM == "temperate")%>% group_by(GENUS) %>% summarise(NSpp = n()))
-  ## Calculate richness of CODEs
+  ## Calculate richness of eco codes and also the richness of Ecocodes divided by tropical and temperate
   Functional <- Data[1:i,] %>% group_by(CODE) %>% summarise(NEco = n()) %>%  spread(key = CODE, value = NEco, fill = 0)
   Ecos <- nrow(Data[1:i,] %>% group_by(CODE) %>% summarise(NEco = n()))
   EcosTrop <- nrow(Data[1:i,]  %>% filter(CLIM == "tropical") %>% group_by(CODE) %>% summarise(NEco = n()))
   EcosTemp <- nrow(Data[1:i,]  %>% filter(CLIM == "temperate") %>% group_by(CODE) %>% summarise(NEco = n()))
   
-  ## Asign them to the proper columns
+  
   ### Make a plot of samples against Good's U
   g2 <- ggplot(Data[1:i,], aes(x = Sample, y = GoodsU)) + ylim(c(0,1))+ geom_line() + geom_hline(yintercept = quorum, lty = 2, color = "red") + theme_classic()
   #### Return the graph, the Ensemble of the samples, and a dataframe with the Good's U, the Number of samples, the species Richness and the number of CODES
@@ -161,6 +158,7 @@ for(x in 1:length(Data2)){
   s<- data.frame(Richness = rep(NA, Bootstraps), RichnessTemp = rep(NA, Bootstraps), RichnessTrop = rep(NA, Bootstraps), Ecos = rep(NA, Bootstraps), EcosTrop = rep(NA, Bootstraps), EcosTemp = rep(NA, Bootstraps))
   b <- list()
   for(i in 1:nrow(s)){
+    #create resampled data for bootsrapping
     bootstrapped<-Data2[[x]][sample(1:nrow(Data2[[x]]),replace=TRUE),]
     a <- ResampleWhile(DF = bootstrapped ,nsim = 500, Quorum = 0.4, method = "Geometric", ncores = 40)
     s$Richness[i] <- a$richness
@@ -210,6 +208,4 @@ Results3 <- bind_rows(Results3)
 saveRDS(Results3, "Results3.rds")
 
 
-ggplot(Results3, aes(y = Mean, x = Time, group = Meassurement)) + geom_ribbon(aes(ymax = Upper, ymin = Lower, fill = Meassurement), alpha = 0.3) + geom_path(aes(color = Meassurement)) + geom_point(aes(color = Meassurement)) + theme_bw() + facet_grid(Type ~ ., scales = "free_y") + theme(legend.position = "bottom") + scale_x_reverse() + xlab("Time [Ma]") + ylab("") + geom_vline(xintercept = 250, lty = 2, color = "red") + geom_vline(xintercept = 200, lty = 2, color = "red")
-
-B-A
+ggplot(Results2, aes(y = Mean, x = Time, group = Eco)) + geom_ribbon(aes(ymax = Upper, ymin = Lower, fill = Eco), alpha = 0.3) + geom_path(aes(color = Eco)) + geom_point(aes(color = Eco)) + theme_bw()  + theme(legend.position = "none") + xlab("Time [Ma]") + ylab("") + geom_vline(xintercept = 250, lty = 2, color = "red") + geom_vline(xintercept = 200, lty = 2, color = "red")
